@@ -1,0 +1,17 @@
+ĐIỀU PHỐI 41 XE CONTAINER – GÓI PWA CHO iOS
+
+Đây là ứng dụng web cài lên Màn hình chính iPhone (PWA), không phải file IPA/App Store.
+
+CÁCH ĐƯA LÊN iPHONE:
+1. Giải nén thư mục này.
+2. Đưa toàn bộ nội dung lên một dịch vụ hosting hỗ trợ HTTPS (ví dụ GitHub Pages, Netlify hoặc máy chủ web của công ty).
+3. Mở đường dẫn HTTPS của ứng dụng bằng Safari trên iPhone.
+4. Chọn nút Chia sẻ (hình vuông có mũi tên lên).
+5. Chọn "Thêm vào MH chính" / "Add to Home Screen", rồi nhấn Thêm.
+6. Mở biểu tượng "Điều phối xe" trên Màn hình chính.
+
+LƯU Ý:
+- Cần HTTPS để cài PWA và dùng chế độ offline.
+- Dữ liệu hiện lưu cục bộ trên trình duyệt/thiết bị (localStorage), không tự đồng bộ giữa nhiều iPhone.
+- Nếu xóa dữ liệu Safari hoặc đổi máy, dữ liệu có thể mất. Nên xuất CSV sao lưu định kỳ.
+- Đây không phải ứng dụng iOS ký số (.ipa); muốn phát hành App Store cần quy trình build, chứng chỉ và tài khoản Apple Developer.

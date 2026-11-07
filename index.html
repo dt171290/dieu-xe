@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Điều phối 41 xe container</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#172033;font-family:Arial,sans-serif}
+header{background:#163b65;color:white;padding:22px max(16px,calc((100% - 1150px)/2))}
+header h1{margin:0 0 6px;font-size:23px}header p{margin:0;color:#dce9f7}
+main{max-width:1150px;margin:20px auto;padding:0 14px}.panel{background:#fff;border:1px solid #e1e7ef;border-radius:13px;padding:16px;margin-bottom:15px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:180px}
+label{font-size:13px;color:#526078}input,select,button{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#172033}
+button{cursor:pointer;font-weight:600}button.primary{background:#165da8;color:white;border-color:#165da8}button.green{background:#13804a;color:white;border-color:#13804a}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.stat{background:#f0f5fb;padding:12px;border-radius:9px;font-size:13px}.stat b{display:block;font-size:24px;margin-top:5px}
+.note{background:#fff8e8;border:1px solid #f0d89e;color:#654b13;padding:11px;border-radius:9px;font-size:13px;line-height:1.5}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.vehicle{border:1px solid #e0e7ef;border-radius:9px;padding:10px;display:flex;gap:10px;align-items:flex-start}.vehicle input[type=checkbox]{width:20px;height:20px;accent-color:#1767ad;flex:none;margin:2px 0 0}.vehicle strong{display:block}.vehicle small{display:block;color:#65728a;margin-top:4px;line-height:1.4}
+.pill{font-size:11px;background:#eaf3ff;color:#155797;padding:4px 7px;border-radius:20px;display:inline-block;margin-top:5px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.muted{font-size:13px;color:#667085}.hidden{display:none}
+table{border-collapse:collapse;width:100%;min-width:700px}td,th{text-align:left;border-bottom:1px solid #e8edf3;padding:9px;font-size:13px}th{background:#f5f7fa}td input,td select{width:100%;min-width:100px;padding:7px}
+.tablewrap{overflow:auto}h3{margin:0 0 12px}
+@media(max-width:650px){.list{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header h1{font-size:19px}.panel{padding:12px}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#163b65">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Điều phối 41 xe">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</head>
+<body>
+<header><h1>ĐIỀU PHỐI XE CONTAINER</h1><p>Chọn xe bằng ô tích • Xe đã tích sẽ chuyển sang danh sách đã chọn • Xe chưa tích tiếp tục hiển thị</p></header>
+<main>
+<section class="panel">
+ <div class="row">
+  <div class="field"><label>Ngày điều phối</label><input type="date" id="date"></div>
+  <div class="field"><label>Nhóm công việc đang điều phối</label><select id="group"><option>Đóng hàng kho gần</option><option>Cắt mooc QC–TNTX</option><option>Cắt rỗng nội địa</option><option>Kéo container hàng về</option></select></div>
+  <div class="field"><label>Tìm xe</label><input id="search" placeholder="Nhập biển số xe..."></div>
+ </div>
+ <div class="stats">
+  <div class="stat">Tổng số xe<b id="total">41</b></div><div class="stat">Đã tích chọn<b id="selected">0</b></div><div class="stat">Còn chưa tích<b id="remaining">41</b></div><div class="stat">Đang chạy<b id="running">0</b></div>
+ </div>
+</section>
+<section class="panel">
+ <h3>Quy tắc điều phối</h3>
+ <div class="note">• Xe đóng thẳng CPC: hạn chế kéo cont tồn Cột Mốc về bãi tập kết.<br>• Xe lấy rỗng, cắt mooc Cột Mốc: có thể kéo cont tồn Cột Mốc hoặc về bãi tập kết lấy mooc qua rỗng nội địa.<br>• Xe cắt mooc lấy 2 rỗng Cột Mốc: bỏ qua công việc kéo cont tồn.<br>• Ưu tiên xe ít lượt, cân bằng số chuyến và luân phiên giữa 4 nhóm.</div>
+</section>
+<section class="panel">
+ <div class="row" style="justify-content:space-between;align-items:center"><h3>Xe còn lại chưa tích</h3><span class="pill">Danh sách chờ điều phối</span></div>
+ <p class="muted">Tích vào ô bên cạnh biển số để đưa xe vào danh sách đã chọn cho nhóm công việc đang chọn ở phía trên.</p>
+ <div id="remainingList" class="list"></div>
+ <p id="emptyRemaining" class="muted hidden">Không còn xe chưa tích trong danh sách.</p>
+</section>
+<section class="panel">
+ <div class="row" style="justify-content:space-between;align-items:center"><h3>Xe đã tích chọn</h3><span class="pill">Đã nhận nhóm công việc</span></div>
+ <p class="muted">Bỏ tích nếu muốn trả xe về danh sách chưa chọn. Có thể đổi nhóm công việc cho từng xe tại đây.</p>
+ <div class="tablewrap"><table><thead><tr><th>Chọn</th><th>Biển số</th><th>Nhóm công việc</th><th>Công việc chi tiết</th><th>Trạng thái</th><th>Tài xế</th><th>Số chuyến</th></tr></thead><tbody id="selectedList"></tbody></table></div>
+ <p id="emptySelected" class="muted">Chưa có xe nào được tích chọn.</p>
+</section>
+<section class="panel">
+ <div class="actions"><button class="primary" id="save">Lưu ngày này</button><button id="export">Xuất Excel (CSV)</button><button id="history">Xem lịch sử</button><button id="reset">Bỏ chọn tất cả xe</button></div>
+ <p class="muted" id="message" aria-live="polite">Dữ liệu được lưu trên trình duyệt của máy đang sử dụng.</p>
+</section>
+<section class="panel hidden" id="historyPanel"><h3>Lịch sử điều phối</h3><div id="historyList" class="muted"></div></section>
+</main>
+<script>
+const plates=["50H-32210","50H-31141","50H-32651","50H-31363","50H-31669","50H-31778","50H-31590","50H-31392","50H-32695","50H-32895","50H-67807","50H-67816","50H-67729","50H-68431","50H-68634","50H-68444","50H-67959","50H-67760","50H-68170","50H-68583","50H-67687","50H-68687","51F-92188","50H-67590","50H-67791","50H-76904","50H-76210","50H-76911","50H-75016","50H-75232","50H-76333","50H-76843","50H-75444","50H-76844","50H-75060","50H-76861","50H-76567","50H-76870","50H-76572","50H-76982","50H-75385"];
+const groups=["Đóng hàng kho gần","Cắt mooc QC–TNTX","Cắt rỗng nội địa","Kéo container hàng về"];
+const tasks=["Chưa chọn","Đóng thẳng CPC","Lấy rỗng – cắt mooc Cột Mốc","Cắt mooc lấy 2 rỗng Cột Mốc","Kéo cont tồn Cột Mốc","Về bãi tập kết lấy mooc – rỗng nội địa","Kéo container hàng nội địa","Kéo container hàng QC–TNTX"];
+const statuses=["Sẵn sàng","Đang chạy","Chờ lệnh","Bảo dưỡng","Tạm ngưng"];
+const KEY="dispatch41_checkbox_v2";let db=JSON.parse(localStorage.getItem(KEY)||"{}"),current=[];
+const $=id=>document.getElementById(id),today=()=>new Date().toLocaleDateString("en-CA");
+function blank(p){return {plate:p,selected:false,group:"",task:"Chưa chọn",status:"Sẵn sàng",driver:"",trips:0}}
+function save(silent=false){db[$("date").value]=current;localStorage.setItem(KEY,JSON.stringify(db));if(!silent)msg("Đã lưu dữ liệu ngày "+$("date").value+".")}
+function msg(s){$("message").textContent=s}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function load(){let old=db[$("date").value]||[];current=plates.map(p=>old.find(v=>v.plate===p)||blank(p));render()}
+function render(){
+ let q=$("search").value.toLowerCase(),left=current.filter(v=>!v.selected&&v.plate.toLowerCase().includes(q)),chosen=current.filter(v=>v.selected);
+ $("remainingList").innerHTML=left.map(v=>`<label class="vehicle"><input type="checkbox" data-check="${v.plate}"><span><strong>${v.plate}</strong><small>Chưa được phân công</small></span></label>`).join("");
+ $("emptyRemaining").classList.toggle("hidden",left.length!==0);
+ $("selectedList").innerHTML=chosen.map(v=>`<tr><td><input type="checkbox" checked data-uncheck="${v.plate}" aria-label="Bỏ chọn ${v.plate}"></td><td><b>${v.plate}</b></td><td><select data-plate="${v.plate}" data-key="group">${groups.map(g=>`<option ${v.group===g?"selected":""}>${g}</option>`).join("")}</select></td><td><select data-plate="${v.plate}" data-key="task">${tasks.map(t=>`<option ${v.task===t?"selected":""}>${t}</option>`).join("")}</select></td><td><select data-plate="${v.plate}" data-key="status">${statuses.map(s=>`<option ${v.status===s?"selected":""}>${s}</option>`).join("")}</select></td><td><input data-plate="${v.plate}" data-key="driver" value="${esc(v.driver)}" placeholder="Tài xế"></td><td><input type="number" min="0" data-plate="${v.plate}" data-key="trips" value="${v.trips}" style="width:70px"></td></tr>`).join("");
+ $("emptySelected").classList.toggle("hidden",chosen.length!==0);
+ $("total").textContent=41;$("selected").textContent=chosen.length;$("remaining").textContent=current.filter(v=>!v.selected).length;$("running").textContent=current.filter(v=>v.status==="Đang chạy").length;
+ document.querySelectorAll("[data-check]").forEach(el=>el.onchange=()=>{let v=current.find(x=>x.plate===el.dataset.check);v.selected=true;v.group=$("group").value;save(true);render()});
+ document.querySelectorAll("[data-uncheck]").forEach(el=>el.onchange=()=>{let v=current.find(x=>x.plate===el.dataset.uncheck);v.selected=false;v.group="";save(true);render()});
+ document.querySelectorAll("[data-plate]").forEach(el=>el.onchange=()=>{let v=current.find(x=>x.plate===el.dataset.plate);v[el.dataset.key]=el.dataset.key==="trips"?Math.max(0,+el.value):el.value;save(true);renderStats()});
+}
+function renderStats(){$("selected").textContent=current.filter(v=>v.selected).length;$("remaining").textContent=current.filter(v=>!v.selected).length;$("running").textContent=current.filter(v=>v.status==="Đang chạy").length}
+$("date").value=today();$("date").onchange=load;$("search").oninput=render;$("group").onchange=()=>msg("Nhóm đang chọn: "+$("group").value+". Các xe tích tiếp theo sẽ được đưa vào nhóm này.");
+$("save").onclick=()=>save();
+$("reset").onclick=()=>{if(confirm("Bỏ tích tất cả xe trong ngày này?")){current.forEach(v=>{v.selected=false;v.group=""});save(true);render();msg("Đã bỏ tích tất cả xe.")}};
+$("export").onclick=()=>{let rows=[["Ngày","Biển số","Đã tích","Nhóm","Công việc","Trạng thái","Tài xế","Số chuyến"],...current.map(v=>[$("date").value,v.plate,v.selected?"Có":"Không",v.group,v.task,v.status,v.driver,v.trips])];let csv="\ufeff"+rows.map(r=>r.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="dieu_phoi_"+$("date").value+".csv";a.click();URL.revokeObjectURL(a.href)};
+$("history").onclick=()=>{$("historyPanel").classList.toggle("hidden");let days=Object.keys(db).sort().reverse();$("historyList").innerHTML=days.length?days.map(d=>`<p><b>${d}</b> — ${db[d].filter(v=>v.selected).length} xe đã tích chọn <button data-open="${d}">Mở ngày</button></p>`).join(""):"Chưa có lịch sử.";document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{$("date").value=b.dataset.open;load();window.scrollTo(0,0)})};
+load();
+</script></body></html>

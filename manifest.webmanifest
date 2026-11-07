@@ -1,0 +1,25 @@
+{
+  "name": "Điều phối 41 xe container",
+  "short_name": "Điều phối xe",
+  "description": "Quản lý và tích chọn điều phối 41 xe container hằng ngày.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f6fa",
+  "theme_color": "#163b65",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
